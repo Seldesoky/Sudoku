@@ -73,43 +73,88 @@ const initialBoards = [
   
   const BOARD_SIZE = 9;
   
-  //-------------------------------- Variables (state) ----------------------------
+  //-------------------------------- Variables ----------------------------
   let board;
-  
+
   let solutionBoard;
   
   let errorCount = 0;
   
   let gameSolved = false;
   
+  let timer;
+  let seconds = 0;
+  let minutes = 0;
+  
+  let gameStarted = false;
+  
   //-------------------------------- Cached Element References ------------------------
   const boardEl = document.querySelector('.sudoku-board');
   
   const resetButtonEl = document.querySelector('#reset-button');
   
+  const startButtonEl = document.querySelector('#start-button');
+  
   const messageEl = document.querySelector('#message');
   
   const errorCounterEl = document.querySelector('#error-count');
   
-  //-------------------------------- Functions --------------------------------
-  function init() {
-    const randomIndex = Math.floor(Math.random() * initialBoards.length);
-    board = initialBoards[randomIndex].map(row => row.slice());
-    solutionBoard = solutionBoards[randomIndex];
-    errorCount = 0;
-    gameSolved = false;
-    updateErrorCounter();
-    render();
-    messageEl.textContent = '';
-  }
+  const timerEl = document.querySelector('#timer');
   
-  function render() {
+  const instructionsButtonEl = document.querySelector('#instructions-button');
+  const instructionsPopupEl = document.querySelector('#instructions-popup');
+  const closePopupEl = document.querySelector('#close-popup');
+  
+  //-------------------------------- Functions --------------------------------
+  function initBoard() {
     boardEl.innerHTML = '';
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
         const cell = document.createElement('div');
         cell.classList.add('sudoku-cell');
         cell.id = `cell-${row * BOARD_SIZE + col}`;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = '1';
+        input.disabled = true; 
+        input.addEventListener('input', handleInputChange);
+        input.addEventListener('keypress', validateInput);
+        cell.appendChild(input);
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+  
+  function initGame() {
+    errorCount = 0;
+    gameSolved = false;
+    gameStarted = false;
+    seconds = 0;
+    minutes = 0;
+    updateErrorCounter();
+    updateTimerDisplay();
+  
+    initBoard();
+  
+    messageEl.textContent = '';
+  }
+  
+  function startGame() {
+    if (!gameStarted) {
+      gameStarted = true;
+      const randomIndex = Math.floor(Math.random() * initialBoards.length);
+      board = initialBoards[randomIndex].map(row => row.slice());
+      solutionBoard = solutionBoards[randomIndex];
+      renderBoard();
+      startTimer();
+    }
+  }
+  
+  function renderBoard() {
+    for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        const cell = document.querySelector(`#cell-${row * BOARD_SIZE + col}`);
+        cell.innerHTML = '';
         if (board[row][col] !== 0) {
           cell.textContent = board[row][col];
           cell.classList.add('fixed');
@@ -118,9 +163,9 @@ const initialBoards = [
           input.type = 'text';
           input.maxLength = '1';
           input.addEventListener('input', handleInputChange);
+          input.addEventListener('keypress', validateInput);
           cell.appendChild(input);
         }
-        boardEl.appendChild(cell);
       }
     }
   }
@@ -128,55 +173,55 @@ const initialBoards = [
   function handleInputChange(event) {
     const input = event.target;
     const value = parseInt(input.value);
+  
     if (gameSolved) {
       input.value = '';
       return;
     }
+  
     const cellId = input.parentElement.id;
     const [_, index] = cellId.split('-').map(Number);
     const row = Math.floor(index / BOARD_SIZE);
     const col = index % BOARD_SIZE;
-    if (!isNaN(value)) {
+  
+    if (!isNaN(value) && value >= 1 && value <= 9) {
       if (value === solutionBoard[row][col]) {
         board[row][col] = value;
       } else {
         input.value = '';
         errorCount++;
         updateErrorCounter();
+        checkErrors();
       }
     } else {
-      board[row][col] = 0;
+      input.value = '';
+      errorCount++;
+      updateErrorCounter();
+      checkErrors();
     }
     if (checkWin()) {
       gameSolved = true;
-      messageEl.textContent = 'Congratulations! You solved the puzzle!';
+      displayWinMessage();
       disableAllInputs();
+      stopTimer();
     }
   }
-
+  
+  function validateInput(event) {
+    const key = event.key;
+    if (!/^[1-9]$/.test(key)) {
+      event.preventDefault();
+      errorCount++;
+      updateErrorCounter();
+      checkErrors();
+    }
+  }
+  
   function disableAllInputs() {
     const inputs = document.querySelectorAll('input');
     inputs.forEach(input => input.disabled = true);
   }
   
-  function isValidMove(row, col, value) {
-    for (let i = 0; i < BOARD_SIZE; i++) {
-      if (board[row][i] === value) return false;
-    }
-    for (let i = 0; i < BOARD_SIZE; i++) {
-      if (board[i][col] === value) return false;
-    }
-    const startRow = Math.floor(row / 3) * 3;
-    const startCol = Math.floor(col / 3) * 3;
-    for (let i = startRow; i < startRow + 3; i++) {
-      for (let j = startCol; j < startCol + 3; j++) {
-        if (board[i][j] === value) return false;
-      }
-    }
-  
-    return true;
-  }
-
   function checkWin() {
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
@@ -187,14 +232,74 @@ const initialBoards = [
     }
     return true;
   }
+  
+  function displayWinMessage() {
+    if (errorCount === 0) {
+      messageEl.textContent = 'WOW, Superb! You can call yourself a Sudoku Guru!';
+    } else if (errorCount === 1) {
+      messageEl.textContent = 'Amazing, Congrats! You solved the puzzle with only one hit!';
+    } else if (errorCount > 1 && errorCount < 10) {
+      messageEl.textContent = 'Congratulations! You solved the puzzle!';
+    } else {
+      messageEl.textContent = 'Oops, You got a lot of hits, How about you try again!';
+    }
+  }
+  
+  function checkErrors() {
+    if (errorCount >= 10) {
+      gameSolved = true;
+      disableAllInputs();
+      stopTimer();
+      messageEl.textContent = 'Oops, You got a lot of hits, How about you try again!';
+    }
+  }
+  
   function updateErrorCounter() {
     errorCounterEl.textContent = `${errorCount}`;
   }
+  
+  function startTimer() {
+    timer = setInterval(() => {
+      seconds++;
+      if (seconds === 60) {
+        seconds = 0;
+        minutes++;
+      }
+      updateTimerDisplay();
+    }, 1000);
+  }
+  
+  function stopTimer() {
+    clearInterval(timer);
+  }
+  
+  function updateTimerDisplay() {
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+    timerEl.textContent = `Time: ${formattedMinutes}:${formattedSeconds}`;
+  }
+  
   function resetGame() {
-    init();
+    stopTimer();
+    initGame();
+  }
+  
+  function showInstructions() {
+    instructionsPopupEl.style.display = 'block';
+  }
+  
+  function hideInstructions() {
+    instructionsPopupEl.style.display = 'none';
   }
   
   //-------------------------------- Event Listeners -----------------------------
   resetButtonEl.addEventListener('click', resetGame);
   
-  init();
+  startButtonEl.addEventListener('click', startGame);
+  
+  instructionsButtonEl.addEventListener('click', showInstructions);
+  
+  closePopupEl.addEventListener('click', hideInstructions);
+  
+  initGame();
+  
