@@ -1,5 +1,5 @@
 # Sudoku
-! (images/sudokuForgurus.png) 
+![Sudoku Game Screenshot](images/sudokuForgurus.png)
 ## Game’s Name: Sudoku for Gurus
 
 ### Description
