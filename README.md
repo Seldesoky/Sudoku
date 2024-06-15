@@ -1,5 +1,5 @@
 # Sudoku
-![Sudoku Game Screenshot](images/sudokuForgurus.png) 
+! (images/sudokuForgurus.png) 
 ## Game’s Name: Sudoku for Gurus
 
 ### Description
@@ -7,8 +7,8 @@ Sudoku for Gurus is a web-based version of the classic number puzzle game, Sudok
 
 ### Getting Started
 
-#### Deployed Game
-You can play the game by visiting the following link: [Sudoku Game](https://your-deployed-game-link.com) <!-- Replace with actual deployed link -->
+#### Deployment
+You can play the game by visiting the following link: [Sudoku For Gurus](https://seldesoky.github.io/Sudoku/)
 
 #### Instructions
 1. Click the "Start Game" button to begin a new puzzle. The timer will start as soon as you begin.
@@ -17,13 +17,6 @@ You can play the game by visiting the following link: [Sudoku Game](https://your
 4. Use your logic to solve the puzzle with as few errors as possible.
 5. Click the "How to Play" button for more detailed instructions.
 
-#### Planning Materials
-Link to planning materials: [Planning Document](https://link-to-planning-doc.com) <!-- Replace with actual link to planning materials -->
-
-### Attributions
-- [Papyrus Font](https://fonts.com) <!-- Replace with actual link if applicable -->
-- [Background Image](https://link-to-background-image.com) <!-- Replace with actual link if applicable -->
-
 ### Technologies Used
 - JavaScript
 - HTML
@@ -31,6 +24,5 @@ Link to planning materials: [Planning Document](https://link-to-planning-doc.com
 
 ### Next Steps
 - Implement different difficulty levels (easy, medium, hard).
-- Add user authentication to save progress and high scores.
 - Include a hint system to assist players when they are stuck.
 - Improve the visual design and add animations for a better user experience.
